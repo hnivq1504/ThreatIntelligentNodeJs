@@ -1,0 +1,19 @@
+{
+  "name": "package",
+  "version": "1.0.0",
+  "description": "no description",
+  "main": "app.js",
+  "scripts": {
+    "test": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hnivq1504/ThreatIntelligentNodeJs.git"
+  },
+  "author": "hnivq1504",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hnivq1504/ThreatIntelligentNodeJs/issues"
+  },
+  "homepage": "https://github.com/hnivq1504/ThreatIntelligentNodeJs#readme"
+}
