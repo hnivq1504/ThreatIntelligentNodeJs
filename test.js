@@ -1,86 +1,109 @@
-const puppeteer = require("puppeteer-core");
+const puppeteer = require('puppeteer');
+const fs = require('fs');
+const inputs = require('./input.js');
 
-const url = "https://www.cve.org/Media/News/AllNews";
-const excutePath = "C:/Program Files/Google/Chrome/Application/chrome.exe";
-
-async function test() {
-    const browser = await puppeteer.launch({
-        executablePath: excutePath,
-        headless: false,
-        defaultViewport: {
-            width: 1200,
-            height: 800
-        }
-    });
-    const page = await browser.newPage();
-    await page.goto(url);
-
-    const links = await page.evaluate(() => {
-        const anchorTags = Array.from(document.querySelectorAll('a'));
-        const filterAnchorTags = anchorTags.filter(tag => {
-            return tag.href && tag.href.includes('/Media/News/item/news');
-        });
-        const url = filterAnchorTags.map(tag => tag.href);
-        return url;
-    });
-    
-    console.log(links)
-
-
-
-    // const link = await page.$eval('a[href')
-    // const [element] = await page.$x("/html/body/div/div/div/div/div[1]/main/div/div[1]/article/div/div/h2/a");
-    // if (element) {
-    //     await element.click();
-    //     const pageTitle = await page.$eval('.content .title', element => element.textContent.trim());
-    //     console.log(pageTitle);
-    // } else {
-    //     console.error('Element not found!!!');
-    // }
-    await browser.close();
+function getCurrentDate() {
+    const currentDate = new Date();
+    const day = currentDate.getDate();
+    const month = currentDate.toLocaleString('default', { month: 'long' });
+    const year = currentDate.getFullYear();
+    return `${day} ${month} ${year}`;
 }
 
-test()
 
-const puppeteer = require('puppeteer');
-const xpath = require('xpath');
-const dom = require('xmldom').DOMParser;
-const fs = require('fs/promises');
+const URL = "https://www.cve.org/Media/News/AllNews";
 
-async function getLinks(url, hint,) {
-    const browser = await puppeteer.launch({ executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe" });
-    const page = await browser.newPage();
+let browser, page;
+
+async function launchBrowser() {
+    browser = await puppeteer.launch();
+    page = await browser.newPage();
+}
+
+function readInput() {
+    const input = inputs.inputs[0];
+
+    const website = input.website;
+    const topic_link = input.topic_link;
+    const start_str = input.start_str;
+    const end_str = input.end_str;
+
+
+    return { website, topic_link, start_str, end_str };
+}
+
+async function getWebContent(url) {
     await page.goto(url);
-
-    const links = await page.evaluate(() => {
-        const anchorTags = Array.from(document.querySelectorAll('a'));
-        const filterAnchorTags = anchorTags.filter(tag => {
-            return tag.href && tag.href.includes('/Media/News/item/news')
-        });
-        const url = filterAnchorTags.map(tag => tag.href);
-        return url;
+    const html = await page.evaluate(() => {
+        return document.documentElement.outerHTML;
     });
+    return html;
+}
 
-    return links;
+function getLink(html, start_str, end_str, website) {
+    const regexLinkZone = new RegExp(`${start_str}(.*?)${end_str}`);
+    const match = html.match(regexLinkZone);
+    const linkZone = match ? match[1] : null;
+    const linkZoneFormat = linkZone.replace(/"/g, "'");
+    const regexLink = new RegExp(`href='(.+?)'`);
+    const link = linkZoneFormat.match(regexLink);
+    if (link[1].includes(website) == true) {
+        return link[1];
+    }
+    else {
+        return website + link[1];
+    }
+}
+
+function getContent(html, start_str, end_str) {
+    const regex = new RegExp(`${start_str}(.*?)${end_str}`);
+    const match = html.match(regex);
+    const content = match ? match[1] : null;
+    return result;
 }
 
 async function getDetail(url) {
-    const browser = await puppeteer.launch({ executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe" });
-    const page = await browser.newPage();
     await page.goto(url);
-    
-    const title = await page.title();
-    await browser.close();
-    console.log(title);
+
+    const author = null;
+    const tag = null;
+    const linkWebsite = null;
+    const linkArticle = url;
+    const title = await page.$eval('h1.title', element => element.textContent);
+    const timestamp = getCurrentDate();
+
+    const article = {
+        "Website": linkWebsite,
+        "Link": linkArticle,
+        "Title": title,
+        "Timestamp": timestamp,
+        "Author": author,
+        "Tag": tag,
+    };
+    return article;
 }
 
-async function start() {
-    const url = "https://www.cve.org/Media/News/AllNews";
-    const hint = '/Media/News/item/news';
-    const links = await getLinks(url, hint);
-    await fs.writeFile('CVE News.txt', links.join("\r\n"));
-    console.log(typeof (links))
-    await browser.close();
-};
+async function main() {
 
-getDetail("https://www.cve.org/Media/News/item/news/2023/04/11/Halborn-Added-as-CNA");
+    while (1 === 1) {
+        //get ds cau hinh trang web tu elastic
+        for (ds) {
+            //   xu ly tuwng site
+            //-lay du lieu : neu xay ra loi thi cap nhat vao elastic (loi layu link, lay title)
+            //cap nhat vao elastic
+        }
+        //delay 1 phut
+
+    }
+    const { website, start_str, end_str } = readInput();
+    await launchBrowser();
+    const document = await getWebContent(URL);
+    const linkArticle = await getLink(document);
+    const webcontent = getWebContent(linkArticle);
+    const title = await getContent(webcontent, title_start, title_end)
+    '
+    const detail = await getDetail(linkArticle);
+    await browser.close();
+}
+
+main();
