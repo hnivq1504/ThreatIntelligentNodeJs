@@ -44,7 +44,7 @@ function getLink(html, website, start_str, end_str) {
 
 async function main() {
   for (const input of inputs.inputs) {
-    const browser = await puppeteer.launch({ executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe" });
+    const browser = await puppeteer.launch(/* { executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe" } */);
     const page = await browser.newPage();
     try {
       let html = await getWebContent(input.topic_link, page);
