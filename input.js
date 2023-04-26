@@ -9,6 +9,7 @@ const inputs = [
         title_end: '<',
         author_start: '',
         author_end: '',
+        is_rss: 'false'
     },
     
     {

@@ -1,6 +1,8 @@
 
 const puppeteer = require('puppeteer');
-const inputs = require('./input.js');
+const dataBase = require('./database');
+
+const client = dataBase.connectElastic();
 
 function getCurrentDate() {
   const now = new Date();
@@ -15,7 +17,7 @@ function getCurrentDate() {
 
 let browser, page;
 async function launchBrowser() {
-  browser = await puppeteer.launch(/* { executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe" } */);
+  browser = await puppeteer.launch({ executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe" });
   page = await browser.newPage();
 }
 
@@ -59,26 +61,31 @@ function getLink(html, website, start_str, end_str) {
 async function main() {
   await launchBrowser();
   while (1 === 1) {
-    for (const input of inputs.inputs) {
-      let html = await getWebContent(input.topic_link, page);
-      let link = getLink(html, input.website, input.link_start, input.link_end);
+    const body = await client.search({
+      index: 'fe_hsoc_crawler_setting',
+      size: 1000
+    });
+    const inputs = body.hits.hits;
+    for (const input of inputs) {
+      let html = await getWebContent(input._source.topic_link, page);
+      let link = getLink(html, input._source.website, input._source.link_start, input._source.link_end);
       let article = await getWebContent(link);
-      let title = getContent(article, input.title_start, input.title_end);
-      let author = getContent(article, input.author_start, input.author_end);
+      let title = getContent(article, input._source.title_start, input._source.title_end);
+      let author = getContent(article, input._source.author_start, input._source.author_end);
       let timestamp = getCurrentDate();
       let data = {
-        "Website": input.website,
+        "Website": input._source.website,
         "Link": link,
         "Title": title,
         "Timestamp": timestamp,
         "Author": author,
       }
       console.log(data);
+      await dataBase.sendOutputDoc('fe_hsoc_secnews_2023', data);
     }
+    await new Promise(resolve => setTimeout(resolve, 5 * 60 * 1000));
   }
-
   await browser.close();
-
 }
 
 main();
