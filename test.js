@@ -50,39 +50,53 @@ async function test(){
     const inputs = body.hits.hits
     console.log(inputs);
 }
+test() */
+
+const dataBase = require('./database');
+
+const client = dataBase.connectElastic();
+
+// async function getIndexMapping(indexName) {
+//     const body = await client.indices.getMapping({
+//         index: indexName,
+//     });
+
+//     const mappings = body[indexName].mappings;
+//     console.log(mappings);
+// }
+
 async function main() {
     const inputIndex = 'fe_hsoc_crawler_setting';
     const outputIndex = 'fe_hsoc_secnews_2023';
 
     const data = {
-        website: 'https://www.cve.org',
-        topic_name: '',
+        /* website: 'https://www.cve.org',
+        topic_name: 'cve',
         topic_link: 'https://www.cve.org/Media/News/AllNews',
         link_start: 'class="media-content"',
         link_end: 'class=""',
         title_start: 'class="title">',
         title_end: '<',
         author_start: '',
-        author_end: ''
+        author_end: '',
+        language: 'en',
+        is_rss: 'false' */
+        website: 'https://en.secnews.gr',
+        topic_name: 'vulnerabilities',
+        topic_link: 'https://en.secnews.gr/security/',
+        link_start: 'class="td-post-category">security</a>',
+        link_end: 'rel="bookmark"',
+        title_start: 'class="tdb-title-text">',
+        title_end: '<',
+        author_start: '',
+        author_end: '',
+        language: 'en',
+        is_rss: 'false'
     };
     // deleteIndex(outputIndex);
     // createOutputIndex(outputIndex);
-    sendDocumentToIndex(inputIndex,data);
+    await  dataBase.sendInputSetting(inputIndex, data);
     // getIndexMapping(inputIndex)
 }
-test() */
 
-const dataBase = require('./database')
-
-const client = dataBase.connectElastic();
-
-async function getIndexMapping(indexName) {
-    const body = await client.indices.getMapping({
-        index: indexName,
-    });
-
-    const mappings = body[indexName].mappings;
-    console.log(mappings);
-}
-
-getIndexMapping('fe_hsoc_secnews_2025');
+main()

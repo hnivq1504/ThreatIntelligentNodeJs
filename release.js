@@ -1,6 +1,7 @@
 
 const puppeteer = require('puppeteer');
 const dataBase = require('./database');
+const translate = require('./translate');
 
 const client = dataBase.connectElastic();
 
@@ -17,7 +18,7 @@ function getCurrentDate() {
 
 let browser, page;
 async function launchBrowser() {
-  browser = await puppeteer.launch({ executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe" });
+  browser = await puppeteer.launch(/* { executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe" } */);
   page = await browser.newPage();
 }
 
@@ -67,19 +68,33 @@ async function main() {
     });
     const inputs = body.hits.hits;
     for (const input of inputs) {
+      let data = {
+        "website": input._source.website,
+        'topic':input._source.topic_name,
+        "language": input._source.language,
+        "link": '',
+        "title_en": '',
+        "title_vn": '',
+        "timestamp": '',
+        "author": '',
+      }
       let html = await getWebContent(input._source.topic_link, page);
       let link = getLink(html, input._source.website, input._source.link_start, input._source.link_end);
       let article = await getWebContent(link);
       let title = getContent(article, input._source.title_start, input._source.title_end);
       let author = getContent(article, input._source.author_start, input._source.author_end);
       let timestamp = getCurrentDate();
-      let data = {
-        "Website": input._source.website,
-        "Link": link,
-        "Title": title,
-        "Timestamp": timestamp,
-        "Author": author,
-      }
+      data['title_'+data.language]=title;
+      data['link'] = link;
+      data['author'] = author;
+      data['timestamp'] = timestamp;
+      /* switch (data.language){
+        case 'vn':
+              data['title_en'] = translate.vnToEn(title);
+        case 'en':
+              data['title_vn'] = translate.enToVn(title);
+      } */
+   
       console.log(data);
       await dataBase.sendOutputDoc('fe_hsoc_secnews_2023', data);
     }

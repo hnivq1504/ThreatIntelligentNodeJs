@@ -1,12 +1,15 @@
 const { Client } = require('@elastic/elasticsearch')
 const client = connectElastic()
+const crypto = require('crypto');
 
-function connectElastic(){
+
+function connectElastic() {
     const client = new Client({
         node: 'http://localhost:9200',
         auth: {
             username: 'elastic',
-            password: 'F6GFOXB7Alko=L+Qd5F1'
+            // password: 'F6GFOXB7Alko=L+Qd5F1'
+            password: '*n=vrDjcEkOopW4dNMYn'
         }
     })
     return client;
@@ -33,7 +36,8 @@ async function createInputIndex(indexName) {
                         title_end: { type: 'text' },
                         author_start: { type: 'text' },
                         author_end: { type: 'text' },
-                        is_rss: {type: 'boolean'},
+                        language: { type: 'text' },
+                        is_rss: { type: 'boolean' },
                     },
                 },
                 settings: {
@@ -70,10 +74,13 @@ async function createOutputIndex(indexName) {
                 mappings: {
                     properties: {
                         website: { type: 'keyword' },
+                        tag: { type: 'text' },
+                        language: { type: 'text' },
                         link: { type: 'keyword' },
-                        title: { type: 'text' },
+                        title_en: { type: 'text' },
+                        title_vn: { type: 'text' },
                         timestamp: { type: 'date' },
-                        author: { type: 'text' }
+                        author: { type: 'text' },
                     },
                 },
                 settings: {
@@ -120,31 +127,37 @@ async function getIndexMapping(indexName) {
     console.log(mappings);
 }
 
+function createHash(data){
+    const hash = crypto.createHash('sha256').update(data).digest('hex');
+    return hash;
+}
+
 async function sendInputSetting(indexName, document) {
-  await client.update({
-    index: indexName,
-    id: document.topic_link,
-    body: {
-      doc: document,
-      upsert: document,
-    },
-    retry_on_conflict: 3,
-  });
-  console.log(`Document sent to index '${indexName}' with ID '${document.topic_link}'`);
+    await client.update({
+        index: indexName,
+        id: document.topic_link,
+        body: {
+            doc: document,
+            upsert: document,
+        },
+        retry_on_conflict: 3,
+    });
+    console.log(`Document sent to index '${indexName}' with ID '${document.topic_link}'`);
 }
 
 async function sendOutputDoc(indexName, document) {
+    let hashLink = createHash(document.link);
     await client.update({
-      index: indexName,
-      id: document.Link,
-      body: {
-        doc: document,
-        upsert: document,
-      },
-      retry_on_conflict: 3,
+        index: indexName,
+        id: hashLink,
+        body: {
+            doc: document,
+            upsert: document,
+        },
+        retry_on_conflict: 3,
     });
-    console.log(`Document sent to index '${indexName}' with ID '${document.Link}'`);
-  }
+    console.log(`Document sent to index '${indexName}' with ID '${hashLink}'`);
+}
 
 async function deleteDoc(indexName, id) {
     const body = await client.delete({
@@ -154,7 +167,7 @@ async function deleteDoc(indexName, id) {
     console.log(body);
 }
 
-async function loadInputSetting(){
+async function loadInputSetting() {
     const body = await client.search({
         index: 'fe_hsoc_crawler_setting',
         size: 1000
