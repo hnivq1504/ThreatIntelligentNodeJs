@@ -2,6 +2,7 @@
 const puppeteer = require('puppeteer');
 const dataBase = require('./database');
 const translate = require('./translate');
+const browser = require('./browser');
 
 const client = dataBase.connectElastic();
 
@@ -16,20 +17,20 @@ function getCurrentDate() {
   return `${year}-${month}-${day}T${hour}:${minute}:${second}`;
 }
 
-let browser, page;
-async function launchBrowser() {
-  browser = await puppeteer.launch(/* { executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe" } */);
-  page = await browser.newPage();
-}
+// let browser, page;
+// async function launchBrowser() {
+//   browser = await puppeteer.launch(/* { executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe" } */);
+//   page = await browser.newPage();
+// }
 
-async function getWebContent(url) {
-  if (url === '') return '';
-  await page.goto(url);
-  const html = await page.evaluate(() => {
-    return document.querySelector('body').outerHTML;
-  })
-  return html;
-}
+// async function getWebContent(url) {
+//   if (url === '') return '';
+//   await page.goto(url);
+//   const html = await page.evaluate(() => {
+//     return document.querySelector('body').outerHTML;
+//   })
+//   return html;
+// }
 
 function getContent(html, start_str, end_str) {
   if (start_str + end_str === '') return '';
@@ -60,7 +61,7 @@ function getLink(html, website, start_str, end_str) {
 }
 
 async function main() {
-  await launchBrowser();
+  // await launchBrowser();
   while (1 === 1) {
     const body = await client.search({
       index: 'fe_hsoc_crawler_setting',
